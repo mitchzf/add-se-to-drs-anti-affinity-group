@@ -96,8 +96,12 @@ log = logging.getLogger("se-antiaffinity")
 AVI_SDK_VERIFY_WARNING = "Strong Recommendation: It is highly recommended"
 
 # DER content of the CMS object identifiers the fallback decryption reads.
-OID_ENVELOPED_DATA = bytes.fromhex("2a864886f70d010703")  # 1.2.840.113549.1.7.3
-OID_RSA_ENCRYPTION = bytes.fromhex("2a864886f70d010101")  # 1.2.840.113549.1.1.1
+OID_ENVELOPED_DATA = bytes.fromhex(
+    "2a864886f70d010703"
+)  # 1.2.840.113549.1.7.3
+OID_RSA_ENCRYPTION = bytes.fromhex(
+    "2a864886f70d010101"
+)  # 1.2.840.113549.1.1.1
 # AES-CBC key sizes in bytes, by object identifier (2.16.840.1.101.3.4.1.x).
 OID_AES_CBC_KEY_SIZES = {
     bytes.fromhex("608648016503040102"): 16,  # aes128-CBC
@@ -168,9 +172,15 @@ def parse_event(
                 details["se_name"],
                 details["se_grp_name"],
                 details.get("cloud_name"),
-                (obj_uuid if obj_uuid.startswith("serviceenginegroup-") else None),
+                (
+                    obj_uuid
+                    if obj_uuid.startswith("serviceenginegroup-")
+                    else None
+                ),
             )
-    raise ValueError("No CREATED_SE event with spawn_se_details found in the alert payload")
+    raise ValueError(
+        "No CREATED_SE event with spawn_se_details found in the alert payload"
+    )
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -193,13 +203,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         argv = argv[1:]
 
     parser = argparse.ArgumentParser(
-        description=("Update vSphere DRS anti-affinity rule with a new Avi Service " "Engine")
+        description=(
+            "Update vSphere DRS anti-affinity rule with a new Avi Service "
+            "Engine"
+        )
     )
     parser.add_argument(
         "--event-file",
         help="Read the Avi alert JSON from this file (for testing).",
     )
-    parser.add_argument("-se", "--se-vm-name", help="Override the SE VM name from the event.")
+    parser.add_argument(
+        "-se", "--se-vm-name", help="Override the SE VM name from the event."
+    )
     parser.add_argument(
         "-seg",
         "--service-engine-group",
@@ -207,7 +222,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--fileobject-download-path",
-        default=os.environ.get("FILEOBJECT_DOWNLOAD_PATH", DEFAULT_CREDENTIALS_FILENAME),
+        default=os.environ.get(
+            "FILEOBJECT_DOWNLOAD_PATH", DEFAULT_CREDENTIALS_FILENAME
+        ),
         help=(
             "Name of the Avi fileobject holding the encrypted credentials "
             f"(default: {DEFAULT_CREDENTIALS_FILENAME}). Also read from "
@@ -216,22 +233,35 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--credentials-cert",
-        default=os.environ.get("AVI_CREDENTIALS_CERT", DEFAULT_CREDENTIALS_CERT),
-        help=("Name of the Avi sslkeyandcertificate whose key decrypts the " "credentials file."),
+        default=os.environ.get(
+            "AVI_CREDENTIALS_CERT", DEFAULT_CREDENTIALS_CERT
+        ),
+        help=(
+            "Name of the Avi sslkeyandcertificate whose key decrypts the "
+            "credentials file."
+        ),
     )
     parser.add_argument(
         "--credentials-file",
-        help=("Use a local credentials file instead of the Avi fileobject " "(for testing)."),
+        help=(
+            "Use a local credentials file instead of the Avi fileobject "
+            "(for testing)."
+        ),
     )
     parser.add_argument(
         "--key-file",
-        help=("PEM private key to decrypt --credentials-file with " "(for testing)."),
+        help=(
+            "PEM private key to decrypt --credentials-file with "
+            "(for testing)."
+        ),
     )
     parser.add_argument(
         "--cert-file",
         help="PEM certificate matching --key-file (for testing).",
     )
-    parser.add_argument("--cloud-name", help="Override the Avi cloud name from the event.")
+    parser.add_argument(
+        "--cloud-name", help="Override the Avi cloud name from the event."
+    )
     parser.add_argument(
         "--controller-fqdn",
         help=(
@@ -243,13 +273,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--se-group-members",
         nargs="+",
         metavar="SE_NAME",
-        help=("Names of the SEs in the SE group, instead of asking the Avi " "API (for testing)."),
+        help=(
+            "Names of the SEs in the SE group, instead of asking the Avi "
+            "API (for testing)."
+        ),
     )
     parser.add_argument(
         "--insecure",
         action="store_true",
         help=(
-            "Skip vCenter TLS certificate validation even if " "VERIFY_VCENTER_CERT is True (it's False by default)."
+            "Skip vCenter TLS certificate validation even if "
+            "VERIFY_VCENTER_CERT is True (it's False by default)."
         ),
     )
     parser.add_argument(
@@ -276,10 +310,15 @@ def get_avi_session():
     token = os.environ.get("API_TOKEN")
     user = os.environ.get("USER")
     if not token or not user:
-        raise RuntimeError("API_TOKEN/USER not set: not running as an Avi ControlScript " "(use --credentials-file)")
+        raise RuntimeError(
+            "API_TOKEN/USER not set: not running as an Avi ControlScript "
+            "(use --credentials-file)"
+        )
     controller = os.environ.get("DOCKER_GATEWAY")
     if not controller:
-        raise RuntimeError("DOCKER_GATEWAY not set: can't find the Avi controller API")
+        raise RuntimeError(
+            "DOCKER_GATEWAY not set: can't find the Avi controller API"
+        )
     return ApiSession.get_session(
         controller,
         user,
@@ -301,7 +340,10 @@ def get_fileobject_contents(session, name: str) -> bytes:
 
     rsp = session.get(f"fileobject/{obj['uuid']}/download")
     if rsp.status_code != 200:
-        raise RuntimeError(f"Couldn't download fileobject '{name}': " f"HTTP {rsp.status_code} {rsp.text[:200]}")
+        raise RuntimeError(
+            f"Couldn't download fileobject '{name}': "
+            f"HTTP {rsp.status_code} {rsp.text[:200]}"
+        )
 
     # The API docs label the response application/json; if the file comes
     # back as a JSON string rather than raw bytes, unwrap it.
@@ -317,17 +359,24 @@ def get_fileobject_contents(session, name: str) -> bytes:
 
 def get_key_and_cert(session, cert_name: str):
     """Return the private key and certificate of an Avi certificate."""
-    obj = session.get_object_by_name("sslkeyandcertificate", cert_name, params={"export_key": True})
+    obj = session.get_object_by_name(
+        "sslkeyandcertificate", cert_name, params={"export_key": True}
+    )
     if not obj:
         raise RuntimeError(f"Certificate '{cert_name}' not found")
     key_pem = obj.get("key")
     if not key_pem or key_pem == "<sensitive>":
         raise RuntimeError(
-            f"Avi didn't return the private key for '{cert_name}'; " "check the script user's permissions"
+            f"Avi didn't return the private key for '{cert_name}'; "
+            "check the script user's permissions"
         )
     passphrase = obj.get("key_passphrase")
-    key = serialization.load_pem_private_key(key_pem.encode(), password=passphrase.encode() if passphrase else None)
-    cert = x509.load_pem_x509_certificate(obj["certificate"]["certificate"].encode())
+    key = serialization.load_pem_private_key(
+        key_pem.encode(), password=passphrase.encode() if passphrase else None
+    )
+    cert = x509.load_pem_x509_certificate(
+        obj["certificate"]["certificate"].encode()
+    )
     return key, cert
 
 
@@ -342,7 +391,9 @@ def decrypt_credentials(encrypted: bytes, key, cert) -> bytes:
     PKCS#7 decryption doesn't support), and files cryptography can't parse,
     such as the indefinite-length BER that ``openssl cms -stream`` writes.
     """
-    if not hasattr(pkcs7, "pkcs7_decrypt_der") or not isinstance(key, rsa.RSAPrivateKey):
+    if not hasattr(pkcs7, "pkcs7_decrypt_der") or not isinstance(
+        key, rsa.RSAPrivateKey
+    ):
         return decrypt_cms_fallback(cms_to_der(encrypted), key, cert)
     try:
         return decrypt_cms_with_cryptography(encrypted, key, cert)
@@ -357,7 +408,9 @@ def decrypt_cms_with_cryptography(encrypted: bytes, key, cert) -> bytes:
         return pkcs7.pkcs7_decrypt_smime(encrypted, cert, key, [])
     if head.startswith(b"-----BEGIN"):
         # openssl cms writes "CMS" PEM headers; cryptography expects "PKCS7"
-        pem = encrypted.replace(b"BEGIN CMS", b"BEGIN PKCS7").replace(b"END CMS", b"END PKCS7")
+        pem = encrypted.replace(b"BEGIN CMS", b"BEGIN PKCS7").replace(
+            b"END CMS", b"END PKCS7"
+        )
         return pkcs7.pkcs7_decrypt_pem(pem, cert, key, [])
     return pkcs7.pkcs7_decrypt_der(encrypted, cert, key, [])
 
@@ -371,7 +424,11 @@ def cms_to_der(encrypted: bytes) -> bytes:
             raise ValueError("S/MIME file has no encrypted content")
         return payload
     if head.startswith(b"-----BEGIN"):
-        body = b"".join(line for line in encrypted.strip().splitlines() if not line.startswith(b"-----"))
+        body = b"".join(
+            line
+            for line in encrypted.strip().splitlines()
+            if not line.startswith(b"-----")
+        )
         return base64.b64decode(body)
     return encrypted
 
@@ -446,7 +503,9 @@ def der_encode(tag: int, *parts: bytes) -> bytes:
 def cert_subject_key_id(cert) -> Optional[bytes]:
     """Return the certificate's subject key identifier, if it has one."""
     try:
-        return cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value.digest
+        return cert.extensions.get_extension_for_class(
+            x509.SubjectKeyIdentifier
+        ).value.digest
     except x509.ExtensionNotFound:
         return None
 
@@ -463,13 +522,16 @@ def recipient_matches(rid_tag: int, rid: bytes, rid_whole: bytes, cert):
         issuer, serial = issuer_and_serial[0], issuer_and_serial[1]
         return (
             issuer[2] == cert.issuer.public_bytes()
-            and int.from_bytes(serial[1], "big", signed=True) == cert.serial_number
+            and int.from_bytes(serial[1], "big", signed=True)
+            == cert.serial_number
         )
     if rid_tag == 0x80:
         return rid == cert_subject_key_id(cert)
     if rid_tag == 0xA0:
         return ber_children(rid)[0][1] == cert_subject_key_id(cert)
-    raise ValueError(f"Unsupported CMS recipient identifier: {rid_whole[:1].hex()}")
+    raise ValueError(
+        f"Unsupported CMS recipient identifier: {rid_whole[:1].hex()}"
+    )
 
 
 def cms_enveloped_fields(der: bytes) -> list[tuple[int, bytes, bytes]]:
@@ -491,11 +553,18 @@ def rsa_recipient_content_key(recipient: bytes, key, cert) -> Optional[bytes]:
     if not recipient_matches(rid[0], rid[1], rid[2], cert):
         return None
     if ber_children(alg[1])[0][1] != OID_RSA_ENCRYPTION:
-        raise ValueError("Unsupported CMS key encryption (only RSA PKCS#1 v1.5, " "openssl's default, is supported)")
-    return key.decrypt(ber_octets(enc_key[0], enc_key[1]), rsa_padding.PKCS1v15())
+        raise ValueError(
+            "Unsupported CMS key encryption (only RSA PKCS#1 v1.5, "
+            "openssl's default, is supported)"
+        )
+    return key.decrypt(
+        ber_octets(enc_key[0], enc_key[1]), rsa_padding.PKCS1v15()
+    )
 
 
-def ec_key_encryption_key(key, point: bytes, ukm: Optional[bytes], key_agreement: bytes) -> bytes:
+def ec_key_encryption_key(
+    key, point: bytes, ukm: Optional[bytes], key_agreement: bytes
+) -> bytes:
     """Derive the AES key-encryption key for an EC recipient (RFC 5753).
 
     Args:
@@ -510,7 +579,10 @@ def ec_key_encryption_key(key, point: bytes, ukm: Optional[bytes], key_agreement
     wrap = scheme[1]
     kek_size = OID_AES_WRAP_KEY_SIZES.get(ber_children(wrap[1])[0][1])
     if kdf_hash is None or kek_size is None:
-        raise ValueError("Unsupported CMS key agreement (only ECDH with an X9.63 KDF and " "AES key wrap is supported)")
+        raise ValueError(
+            "Unsupported CMS key agreement (only ECDH with an X9.63 KDF and "
+            "AES key wrap is supported)"
+        )
     shared = key.exchange(
         ec.ECDH(),
         ec.EllipticCurvePublicKey.from_encoded_point(key.curve, point),
@@ -539,7 +611,8 @@ def ec_recipient_content_key(recipient: bytes, key, cert) -> Optional[bytes]:
     originator = ber_children(fields[1][1])[0]
     if originator[0] != 0xA1:
         raise ValueError(
-            "Unsupported CMS key agreement originator (only a one-off " "public key, openssl's default, is supported)"
+            "Unsupported CMS key agreement originator (only a one-off "
+            "public key, openssl's default, is supported)"
         )
     # The BIT STRING's first byte counts unused bits; the point follows.
     point = ber_children(originator[1])[1][1][1:]
@@ -555,7 +628,9 @@ def ec_recipient_content_key(recipient: bytes, key, cert) -> Optional[bytes]:
         rid, wrapped = rid_and_key[0], rid_and_key[1]
         if recipient_matches(rid[0], rid[1], rid[2], cert):
             kek = ec_key_encryption_key(key, point, ukm, rest[0][1])
-            return keywrap.aes_key_unwrap(kek, ber_octets(wrapped[0], wrapped[1]))
+            return keywrap.aes_key_unwrap(
+                kek, ber_octets(wrapped[0], wrapped[1])
+            )
     return None
 
 
@@ -569,7 +644,9 @@ def cms_content_key(recipient_infos: bytes, key, cert) -> bytes:
             content_key = ec_recipient_content_key(recipient, key, cert)
         if content_key is not None:
             return content_key
-    raise ValueError("The credentials file wasn't encrypted to this certificate")
+    raise ValueError(
+        "The credentials file wasn't encrypted to this certificate"
+    )
 
 
 def cms_encrypted_content(content_info: bytes) -> tuple[int, bytes, bytes]:
@@ -582,7 +659,9 @@ def cms_encrypted_content(content_info: bytes) -> tuple[int, bytes, bytes]:
     alg = ber_children(fields[1][1])
     key_size = OID_AES_CBC_KEY_SIZES.get(alg[0][1])
     if key_size is None:
-        raise ValueError("Unsupported CMS content encryption (only AES-CBC is supported)")
+        raise ValueError(
+            "Unsupported CMS content encryption (only AES-CBC is supported)"
+        )
     return (
         key_size,
         ber_octets(alg[1][0], alg[1][1]),
@@ -600,13 +679,18 @@ def decrypt_cms_fallback(der: bytes, key, cert) -> bytes:
     try:
         fields = cms_enveloped_fields(der)
         content_key = cms_content_key(ber_first(fields, 0x31), key, cert)
-        key_size, iv, ciphertext = cms_encrypted_content(ber_first(fields, 0x30))
+        key_size, iv, ciphertext = cms_encrypted_content(
+            ber_first(fields, 0x30)
+        )
     except keywrap.InvalidUnwrap as exc:
         raise ValueError(
-            "Couldn't decrypt the credentials file: the key agreed with ECDH " "didn't unwrap the content key"
+            "Couldn't decrypt the credentials file: the key agreed with ECDH "
+            "didn't unwrap the content key"
         ) from exc
     except (IndexError, ValueError) as exc:
-        raise ValueError(f"Couldn't decrypt the credentials file: {exc}") from exc
+        raise ValueError(
+            f"Couldn't decrypt the credentials file: {exc}"
+        ) from exc
 
     if len(content_key) != key_size:
         raise ValueError("Couldn't decrypt the CMS content key")
@@ -634,13 +718,18 @@ def parse_vcenter_credentials(args) -> tuple[str, str, str]:
             if not args.cert_file:
                 raise RuntimeError("--key-file needs --cert-file too")
             with open(args.key_file, "rb") as f:
-                key = serialization.load_pem_private_key(f.read(), password=None)
+                key = serialization.load_pem_private_key(
+                    f.read(), password=None
+                )
             with open(args.cert_file, "rb") as f:
                 cert = x509.load_pem_x509_certificate(f.read())
             data = decrypt_credentials(data, key, cert)
     else:
         if not args.credentials_cert:
-            raise RuntimeError("Set --credentials-cert or AVI_CREDENTIALS_CERT to the Avi " "certificate name")
+            raise RuntimeError(
+                "Set --credentials-cert or AVI_CREDENTIALS_CERT to the Avi "
+                "certificate name"
+            )
         session = get_avi_session()
         key, cert = get_key_and_cert(session, args.credentials_cert)
         data = decrypt_credentials(
@@ -654,7 +743,9 @@ def parse_vcenter_credentials(args) -> tuple[str, str, str]:
 
 def find_vm(content, vm_name: str):
     """Return the VM with this exact name, or None."""
-    view = content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True)
+    view = content.viewManager.CreateContainerView(
+        content.rootFolder, [vim.VirtualMachine], True
+    )
     try:
         matches = [vm for vm in view.view if vm.name == vm_name]
     finally:
@@ -669,7 +760,9 @@ def get_cluster(vm) -> vim.ClusterComputeResource:
     host = vm.runtime.host
     cluster = host.parent if host else None
     if not isinstance(cluster, vim.ClusterComputeResource):
-        raise RuntimeError(f"VM '{vm.name}' is not running on a host in a cluster")
+        raise RuntimeError(
+            f"VM '{vm.name}' is not running on a host in a cluster"
+        )
     return cluster
 
 
@@ -682,7 +775,10 @@ def get_controller_cluster_name(session) -> str:
     """
     rsp = session.get("cluster")
     if rsp.status_code != 200:
-        raise RuntimeError("Couldn't read the controller cluster: " f"HTTP {rsp.status_code} {rsp.text[:200]}")
+        raise RuntimeError(
+            "Couldn't read the controller cluster: "
+            f"HTTP {rsp.status_code} {rsp.text[:200]}"
+        )
     name = rsp.json().get("name")
     if not name:
         raise RuntimeError("The Avi controller cluster has no name")
@@ -696,7 +792,9 @@ def ref_uuid(ref: Optional[str]) -> Optional[str]:
     return ref.rsplit("/", 1)[-1].split("#", 1)[0]
 
 
-def get_se_group_se_names(session, seg_name: str, cloud_name: str, seg_uuid: Optional[str] = None) -> list[str]:
+def get_se_group_se_names(
+    session, seg_name: str, cloud_name: str, seg_uuid: Optional[str] = None
+) -> list[str]:
     """Return the names of the Service Engines in an SE group, from Avi.
 
     Avi names each SE after its VM in vCenter (the se_name in the
@@ -716,10 +814,18 @@ def get_se_group_se_names(session, seg_name: str, cloud_name: str, seg_uuid: Opt
             params={"cloud_ref.name": cloud_name},
         )
         if not seg:
-            raise RuntimeError(f"SE group '{seg_name}' not found in cloud '{cloud_name}'")
+            raise RuntimeError(
+                f"SE group '{seg_name}' not found in cloud '{cloud_name}'"
+            )
         seg_uuid = seg["uuid"]
-    ses = session.get_objects_iter("serviceengine", params={"fields": "name,se_group_ref"})
-    names = [se["name"] for se in ses if ref_uuid(se.get("se_group_ref")) == seg_uuid]
+    ses = session.get_objects_iter(
+        "serviceengine", params={"fields": "name,se_group_ref"}
+    )
+    names = [
+        se["name"]
+        for se in ses
+        if ref_uuid(se.get("se_group_ref")) == seg_uuid
+    ]
     log.info(
         "Avi API lists %d SE(s) in SE group '%s' (%s): %s",
         len(names),
@@ -749,7 +855,9 @@ def find_se_group_vms(content, cluster, vm, se_names) -> list:
         se_names: Names of the SEs in the SE group, from the Avi API.
     """
     wanted = set(se_names) - {vm.name}
-    view = content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True)
+    view = content.viewManager.CreateContainerView(
+        content.rootFolder, [vim.VirtualMachine], True
+    )
     try:
         found = [other for other in view.view if other.name in wanted]
     finally:
@@ -761,7 +869,8 @@ def find_se_group_vms(content, cluster, vm, se_names) -> list:
             others.append(other)
         else:
             log.warning(
-                "SE VM '%s' is in cluster '%s', not '%s'; it can't be in " "this cluster's rule",
+                "SE VM '%s' is in cluster '%s', not '%s'; it can't be in "
+                "this cluster's rule",
                 other.name,
                 getattr(other_cluster, "name", None),
                 cluster.name,
@@ -777,7 +886,8 @@ def find_anti_affinity_rule(cluster, rule_name: str):
         (
             r
             for r in cluster.configurationEx.rule
-            if isinstance(r, vim.cluster.AntiAffinityRuleSpec) and r.name == rule_name
+            if isinstance(r, vim.cluster.AntiAffinityRuleSpec)
+            and r.name == rule_name
         ),
         None,
     )
@@ -794,7 +904,8 @@ def plan_rule_change(cluster, vm, rule_name: str, group_vms):
         missing = [v for v in group_vms if v not in in_rule]
         if not missing:
             log.info(
-                "All of the SE group's VMs in cluster '%s' are already in " "rule '%s'; nothing to do",
+                "All of the SE group's VMs in cluster '%s' are already in "
+                "rule '%s'; nothing to do",
                 cluster.name,
                 rule_name,
             )
@@ -820,7 +931,9 @@ def plan_rule_change(cluster, vm, rule_name: str, group_vms):
             cluster.name,
         )
         return None
-    info = vim.cluster.AntiAffinityRuleSpec(name=rule_name, enabled=True, userCreated=True, vm=group_vms)
+    info = vim.cluster.AntiAffinityRuleSpec(
+        name=rule_name, enabled=True, userCreated=True, vm=group_vms
+    )
     vm_names = ", ".join(v.name for v in group_vms)
     return (
         vim.cluster.RuleSpec(operation="add", info=info),
@@ -871,7 +984,9 @@ def add_vm_to_anti_affinity_rule(  # pylint: disable=too-many-arguments
         return
 
     log.info("%s on cluster '%s'", action, cluster.name)
-    task = cluster.ReconfigureComputeResource_Task(vim.cluster.ConfigSpecEx(rulesSpec=[rule_spec]), modify=True)
+    task = cluster.ReconfigureComputeResource_Task(
+        vim.cluster.ConfigSpecEx(rulesSpec=[rule_spec]), modify=True
+    )
     WaitForTask(task)
     log.info("Done")
 
@@ -889,7 +1004,9 @@ def quiet_ssl_warnings() -> None:
     a warning for every session, and urllib3 warns on every request.
     """
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    warnings.filterwarnings("ignore", message=rf"\s*\**\s*{AVI_SDK_VERIFY_WARNING}")
+    warnings.filterwarnings(
+        "ignore", message=rf"\s*\**\s*{AVI_SDK_VERIFY_WARNING}"
+    )
     logging.getLogger("avi.sdk.avi_api").addFilter(drop_avi_verify_warning)
 
 
@@ -903,7 +1020,9 @@ def main(argv: list[str]) -> int:
         int: Exit status: 0 on success, 1 if the SE VM isn't in vCenter, 2 if
         no SE name, SE group or cloud name was given.
     """
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
+    )
     quiet_ssl_warnings()
     args = parse_args(argv)
 
@@ -920,16 +1039,21 @@ def main(argv: list[str]) -> int:
         seg_uuid = None
     if not se_vm_name or not seg_name or not cloud_name:
         log.error(
-            "No SE name/SE group/cloud name: pass the Avi alert JSON as the " "first argument, or use --event-file"
+            "No SE name/SE group/cloud name: pass the Avi alert JSON as the "
+            "first argument, or use --event-file"
         )
         return 2
 
     vcenter, user, password = parse_vcenter_credentials(args)
-    controller = args.controller_fqdn or get_controller_cluster_name(get_avi_session())
+    controller = args.controller_fqdn or get_controller_cluster_name(
+        get_avi_session()
+    )
     rule_name = f"avi_se_antiaffinity_{controller}_{cloud_name}_{seg_name}"
     se_names = args.se_group_members
     if se_names is None:
-        se_names = get_se_group_se_names(get_avi_session(), seg_name, cloud_name, seg_uuid)
+        se_names = get_se_group_se_names(
+            get_avi_session(), seg_name, cloud_name, seg_uuid
+        )
 
     si = SmartConnect(
         host=vcenter,
@@ -941,7 +1065,9 @@ def main(argv: list[str]) -> int:
         content = si.RetrieveContent()
         vm = find_vm(content, se_vm_name)
         if vm is None:
-            log.error("SE VM '%s' not found in vCenter %s", se_vm_name, vcenter)
+            log.error(
+                "SE VM '%s' not found in vCenter %s", se_vm_name, vcenter
+            )
             return 1
         add_vm_to_anti_affinity_rule(
             content,

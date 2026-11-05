@@ -14,6 +14,7 @@ import datetime
 import importlib.util
 import json
 import os
+import socket
 from pathlib import Path
 
 import pytest
@@ -53,6 +54,29 @@ def load_script():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+class NetworkBlockedError(RuntimeError):
+    """A test tried to open a network connection."""
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    """Fail any test that tries to reach a real system over the network.
+
+    vCenter (SmartConnect) and the Avi API must be mocked; if a mock is
+    missing, the test fails here instead of connecting.
+    """
+
+    def blocked(*args, **kwargs):
+        raise NetworkBlockedError(
+            f"Test tried to open a network connection: {args[1:]} {kwargs}"
+        )
+
+    monkeypatch.setattr(socket.socket, "connect", blocked)
+    monkeypatch.setattr(socket.socket, "connect_ex", blocked)
+    monkeypatch.setattr(socket, "create_connection", blocked)
+    monkeypatch.setattr(socket, "getaddrinfo", blocked)
 
 
 @pytest.fixture

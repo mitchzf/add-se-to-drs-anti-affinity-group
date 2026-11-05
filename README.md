@@ -282,7 +282,8 @@ poetry install
 ```
 
 You can run the script from a workstation with a saved alert, a local credentials file and
-`--dry-run`:
+`--dry-run`. These commands **log in to the real vCenter** named in the credentials file and
+read its VMs and rules; `--dry-run` only stops the script from changing the rule:
 
 ```sh
 # Plain-text credentials file (testing only)
@@ -313,4 +314,12 @@ Run the unit tests, with coverage. No controller or vCenter is needed:
 
 ```sh
 poetry run pytest --cov --cov-branch --cov-report=term-missing
+```
+
+The tests never contact a real system. vCenter and the Avi API are mocks, and any attempt to
+open a network connection fails the test. To run the dry-run commands above against a mocked
+vCenter, with `event_data.json` and throwaway test credentials, run:
+
+```sh
+poetry run pytest tests/test_dry_run.py -v
 ```
