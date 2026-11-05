@@ -1,0 +1,77 @@
+[project]
+name = "avi-aa-group-update"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Your Name",email = "you@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "avisdk (>=32.1.4,<33.0.0)",
+    "pyvim (>=3.0.3,<4.0.0)",
+    "pyvmomi (>=9.1.1.0,<10.0.0.0)",
+    "argparse (>=1.4.0,<2.0.0)",
+    "cryptography (>=45)"
+]
+
+[tool.poetry]
+packages = [{include = "avi_aa_group_update", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.2.0,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "black (>=26.10.1,<27.0.0)",
+    "flake8 (>=7.5.0,<8.0.0)",
+    "pylint (>=4.1.3,<5.0.0)",
+    "mypy (>=2.4.1,<3.0.0)",
+    "bandit (>=1.9.4,<2.0.0)"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+
+[tool.coverage.run]
+source = ["."]
+
+[tool.coverage.report]
+omit = ["tests/*"]
+
+[tool.black]
+line-length = 79
+
+[tool.pylint.main]
+# pytest puts tests/ on the import path (see pythonpath above); do the same
+# for pylint so "from conftest import ..." resolves.
+init-hook = "import sys; sys.path.insert(0, 'tests')"
+
+[tool.pylint.format]
+max-line-length = 79
+
+[tool.mypy]
+# Same import path as pytest, so "from conftest import ..." resolves.
+mypy_path = "tests"
+# Also check the bodies of functions without annotations (most tests).
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# The Avi SDK doesn't ship type information.
+module = ["avi.*"]
+ignore_missing_imports = true
+
+[tool.bandit.assert_used]
+# pytest tests are written with assert; only flag asserts outside the tests.
+skips = ["*/tests/*.py", "tests/*.py"]
+
+[tool.isort]
+# Match Black so the two tools don't fight over import formatting.
+profile = "black"
+line_length = 79
+# Tests import conftest directly (tests/ is on the path); treat it as local.
+known_local_folder = ["conftest"]

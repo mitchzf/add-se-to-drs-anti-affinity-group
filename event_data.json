@@ -1,0 +1,30 @@
+{
+    "name": "CreateNewSE-serviceenginegroup-04ddb86d-cacd-423d-99e4-8b807e9e2775-1793217725.098949-1793217725-7852204",
+    "level": "ALERT_LOW",
+    "reason": "threshold_exceeded",
+    "obj_name": "Default-Group",
+    "threshold": 1,
+    "events": [
+        {
+            "report_timestamp": 1793217725,
+            "event_id": "CREATED_SE",
+            "obj_uuid": "serviceenginegroup-04ddb86d-cacd-423d-99e4-8b807e9e2775",
+            "obj_name": "Default-Group",
+            "event_details": {
+                "spawn_se_details": {
+                    "se_name": "slb-se-eyiec",
+                    "se_cookie": "2c7aac5a-879c-4334-a9a7-925f7df6bf62",
+                    "host_name": "esxi1.example.com",
+                    "availability_zone": "N/A",
+                    "status_code": 0,
+                    "vcpus": 1,
+                    "memory": 2048,
+                    "se_grp_name": "Default-Group",
+                    "cloud_name": "Default-Cloud",
+                    "flavor_name": "N/A"
+                }
+            }
+        }
+    ],
+    "throttle_count": 0
+}
