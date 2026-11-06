@@ -3,8 +3,7 @@
 `avi-controlscript-se-antiaffinitygroup.py` is an Avi Load Balancer ControlScript. It keeps
 Service Engine VMs from the same SE group on separate ESXi hosts. It does this by adding each
 new SE VM to a vSphere DRS VM-VM anti-affinity rule. Typically this is done to minimize the
-frequency with which vSphere DRS will vMotion SE VMs, which can cause loss of bytes in 
-flight.
+frequency with which vSphere DRS will vMotion SE VMs, which can cause loss of bytes in flight.
 
 ## How it works
 
@@ -81,6 +80,11 @@ it, and the key never leaves the controller.
    already have, such as one from your certificate management platform.
 5. Find the certificate in the list and click its **Export** icon. Copy the **Certificate** text
    (not the key) into a file named `controlscript_cert.pem`.
+
+**Note:** You do not strictly need to create a new cert/key for this workflow. You may use an
+existing RSA or EC cert from the controller, so long as you have access to the key. Just ensure
+that you update the value of `DEFAULT_CREDENTIALS_CERT` on line 141 of the script to match the
+name of the `sslkeyandcertificate` object which you intend to use.
 
 ### 1b. Encrypt the file
 
@@ -178,21 +182,6 @@ Then add the script:
 4. Click **Import File** and choose `avi-controlscript-se-antiaffinitygroup.py`, or paste the
    script into the editor.
 5. Click **Save**.
-
-**Check that the Python packages are there.** Before relying on the alert, you can create a
-throwaway ControlScript containing:
-
-```python
-import pyVmomi, cryptography
-print("pyVmomi", pyVmomi.__version__, "cryptography", cryptography.__version__)
-```
-
-Attach it to a test alert action and trigger the action. If either import fails, the real
-script will fail the same way. Any `cryptography` version from 3.1 on works. Versions before
-44 don't have PKCS#7 decryption, and no version decrypts files made with an EC certificate, so
-the script uses its own decryption code in those cases. That code handles what the
-`openssl cms -encrypt` command in [step 1b](#1b-encrypt-the-file) writes for an RSA or EC
-certificate.
 
 ## 3. Create the alert action
 
@@ -305,8 +294,7 @@ least one other, or the script stops before changing the rule. `--controller-fqd
 controller name to use in the rule name.
 
 Other options: `-se`/`-seg`/`--cloud-name` override the SE name, SE group and cloud name from
-the event. Outside the
-controller, `--credentials-cert`/`AVI_CREDENTIALS_CERT` and
+the event. Outside the controller, `--credentials-cert`/`AVI_CREDENTIALS_CERT` and
 `--fileobject-download-path`/`FILEOBJECT_DOWNLOAD_PATH` override the settings above. Run
 `--help` for the full list.
 
